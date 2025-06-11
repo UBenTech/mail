@@ -107,8 +107,8 @@ $recent_campaigns = get_recent_campaigns(5); // Get 5 recent campaigns
                                                 <td>
                                                     <?php if (strtolower($campaign['status']) == 'draft' || strtolower($campaign['status']) == 'scheduled'): ?>
                                                         <a href="compose.php?edit_campaign_id=<?php echo htmlspecialchars($campaign['id']); ?>" class="btn btn-sm btn-outline-primary">Edit</a>
-                                                    <?php else: ?>
-                                                        <button class="btn btn-sm btn-outline-info">View</button> <?php // Remains a non-functional button for 'sent' status for now ?>
+                                                    <?php else: // For 'sent', 'failed', or any other status that is not draft/scheduled ?>
+                                                        <a href="campaign_view.php?id=<?php echo htmlspecialchars($campaign['id']); ?>" class="btn btn-sm btn-outline-info">View</a>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>
