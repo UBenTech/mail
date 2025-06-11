@@ -1,0 +1,135 @@
+/* General body and sidebar styles (some might be from original template) */
+body {
+    font-family: 'Arial', sans-serif; /* Example font */
+    background-color: #f4f7f6; /* Light background for the page */
+}
+
+#sidebar {
+    background-color: #ffffff; /* White sidebar */
+    color: #333;
+    border-right: 1px solid #e7e7e7;
+    min-height: 100vh; /* Full height sidebar */
+    position: sticky; /* Make sidebar sticky */
+    top: 0;
+    height: 100vh; /* Ensure it spans full viewport height */
+    overflow-y: auto; /* Allow scrolling in sidebar if content is too long */
+    z-index: 1020; /* Ensure sidebar is above most content, but below modals (usually 1050+) */
+}
+
+#sidebar .sidebar-header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #e7e7e7;
+}
+
+#sidebar .sidebar-header img.logo {
+    max-width: 60px; /* Control logo size */
+    margin-bottom: 10px;
+}
+
+#sidebar .sidebar-header h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+    color: #333;
+}
+
+#sidebar .nav-link {
+    color: #555;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+}
+
+#sidebar .nav-link:hover,
+#sidebar .nav-link.active {
+    color: #007bff; /* Bootstrap primary color for active/hover */
+    background-color: #e9ecef;
+}
+
+#sidebar .nav-link .fas { /* FontAwesome icons */
+    margin-right: 10px;
+}
+
+/* Main content styling */
+main {
+    padding-top: 20px;
+}
+
+.stat-card {
+    border: none; /* Remove default card border */
+    border-radius: 8px; /* Softer corners */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); /* Subtle shadow */
+    /* margin-bottom: 20px; Bootstrap grid mb-3 on col should handle this */
+}
+.stat-card .card-body {
+    padding: 20px;
+}
+.stat-card .card-title {
+    font-size: 1rem;
+    color: #6c757d; /* Muted color for title */
+    margin-bottom: 5px;
+}
+.stat-card .card-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #343a40; /* Darker color for number */
+}
+
+.card { /* General card styling improvements */
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: none;
+    margin-bottom: 1.5rem; /* Default bottom margin for cards */
+}
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    font-weight: bold;
+    padding: 0.75rem 1.25rem;
+}
+
+/* Ensure main content takes full width when sidebar is not shown on smaller screens */
+@media (max-width: 767.98px) { /* Bootstrap's md breakpoint is 768px, so below this */
+    main.col-md-9.ms-sm-auto.col-lg-10 {
+        margin-left: 0 !important; /* Override Bootstrap's auto margin if sidebar is completely removed or display:none */
+        width: 100%;
+        padding-left: 15px; /* Standard container padding */
+        padding-right: 15px; /* Standard container padding */
+        flex: 0 0 100%; /* Ensure it takes full flex width */
+        max-width: 100%;
+    }
+
+    /* If #sidebar has a fixed width and is hidden with transform,
+       main might need margin-left:0. But with d-md-block, it should reflow.
+       The above rules ensure it uses full width when sidebar is not part of layout. */
+
+    .stat-card h5.card-title {
+        font-size: 0.9rem; /* Slightly smaller title on mobile */
+    }
+    .stat-card h2.card-text {
+        font-size: 1.75rem; /* Slightly smaller number on mobile */
+    }
+}
+
+@media (max-width: 575.98px) { /* Bootstrap's sm breakpoint */
+    .table-responsive thead {
+        /* Optional: Hide table header on very small screens if table data is self-explanatory
+           or if using a card-based layout for rows instead. For now, keep visible. */
+    }
+    .table-responsive tbody tr td {
+        font-size: 0.85rem; /* Slightly smaller font in table cells */
+        padding: 0.5rem 0.4rem; /* Reduce padding in cells */
+    }
+    .table-responsive .btn-sm { /* Make buttons in table even smaller */
+       font-size: 0.75rem;
+       padding: 0.2rem 0.4rem;
+    }
+    .table-responsive .badge {
+       font-size: 0.7rem;
+    }
+    main {
+        padding-top: 15px; /* Reduce top padding on very small screens */
+    }
+    .card-header h5 {
+        font-size: 1.1rem; /* Slightly smaller card headers */
+    }
+}

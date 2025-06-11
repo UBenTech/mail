@@ -28,7 +28,7 @@ $recent_campaigns = get_recent_campaigns(5); // Get 5 recent campaigns
 
                 <!-- Stats Cards -->
                 <div class="row mb-4">
-                    <div class="col-md-3">
+                    <div class="col-12 col-sm-6 col-md-3 mb-3">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <h5 class="card-title">Emails Sent</h5>
@@ -38,7 +38,7 @@ $recent_campaigns = get_recent_campaigns(5); // Get 5 recent campaigns
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-12 col-sm-6 col-md-3 mb-3">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <h5 class="card-title">Open Rate</h5>
@@ -47,7 +47,7 @@ $recent_campaigns = get_recent_campaigns(5); // Get 5 recent campaigns
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-12 col-sm-6 col-md-3 mb-3">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <h5 class="card-title">Click Rate</h5>
@@ -56,7 +56,7 @@ $recent_campaigns = get_recent_campaigns(5); // Get 5 recent campaigns
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-12 col-sm-6 col-md-3 mb-3">
                         <div class="card stat-card">
                             <div class="card-body">
                                 <h5 class="card-title">Bounce Rate</h5>
