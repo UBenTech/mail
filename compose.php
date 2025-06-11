@@ -66,6 +66,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['edit_campaign_id'])) {
     }
 }
 
+// Handle loading template content if requested by GET parameter
+// This is processed after 'edit_campaign_id' so template can overwrite subject/body from loaded campaign.
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['load_template_id']) && is_numeric($_GET['load_template_id'])) {
+    $loaded_template_id_from_get = (int)$_GET['load_template_id'];
+
+    // Set $selected_template_id so the dropdown re-selects the loaded template
+    $selected_template_id = $loaded_template_id_from_get;
+
+    if (isset($conn) && $conn instanceof mysqli && $conn->ping()) {
+        $template_content = get_template_content_for_compose($conn, $loaded_template_id_from_get);
+        if ($template_content) {
+            // Overwrite subject and body with template content
+            // $campaign_name is NOT overwritten here by template, preserving existing name (either from edit mode or campaign_name_preserve)
+            $subject = $template_content['subject'];
+            $body_html = $template_content['body_html'];
+
+            // Optionally, if you want to also set campaign_name from template *if* campaign_name is empty:
+            // if (empty($campaign_name) && !empty($template_content['name'])) { // Assuming get_template_content_for_compose could return 'name'
+            //    $campaign_name = $template_content['name'];
+            // }
+
+        } else {
+            // Append to existing error messages if any
+            $page_error_message .= " Failed to load content for selected template (ID: " . htmlspecialchars($loaded_template_id_from_get) . "). ";
+        }
+    } else {
+        $page_error_message .= " Database error: Cannot load template content when processing load_template_id. ";
+    }
+}
+
+// Handle preserved campaign name (e.g., after template selection for a new campaign, or if passed in URL with edit)
+// This should apply if $campaign_name is currently empty (i.e., not in edit mode where it's prefilled from DB,
+// or if template loading didn't set it).
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['campaign_name_preserve'])) {
+    if (empty($campaign_name)) { // Only pre-fill if $campaign_name wasn't set by 'edit_campaign_id'
+        $campaign_name = trim($_GET['campaign_name_preserve']);
+    }
+}
+
+
 // Handle POST request (create or update)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Retrieve all form fields from POST to repopulate form if error or for saving
