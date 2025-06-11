@@ -81,3 +81,22 @@ ON DUPLICATE KEY UPDATE setting_value = '20';
 
 -- Add any other essential default settings here.
 -- For example, a site title or theme setting could be added later.
+
+-- Campaign Recipients Table
+-- Stores individual recipients for each campaign send attempt.
+CREATE TABLE IF NOT EXISTS campaign_recipients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    campaign_id INT NOT NULL,
+    contact_id INT DEFAULT NULL, -- Nullable if sending to email not in contacts list, though current plan uses existing contacts
+    email_address VARCHAR(255) NOT NULL, -- The email address targeted at the time of send/schedule
+    status VARCHAR(50) DEFAULT 'targeted', -- e.g., 'targeted', 'sim_sent', 'sim_failed', 'bounced_simulation'
+    processed_at TIMESTAMP NULL DEFAULT NULL, -- Timestamp of when this recipient was processed (e.g., marked as 'sim_sent')
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- When this recipient record was created for the campaign
+
+    FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+    FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL, -- If contact deleted, keep log but nullify link
+
+    INDEX idx_campaign_recipients_campaign_id (campaign_id),
+    INDEX idx_campaign_recipients_contact_id (contact_id),
+    INDEX idx_campaign_recipients_email_status (email_address, status)
+);
