@@ -54,3 +54,30 @@ CREATE TABLE IF NOT EXISTS contacts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Application Settings Table
+CREATE TABLE IF NOT EXISTS app_settings (
+    setting_key VARCHAR(100) NOT NULL PRIMARY KEY,
+    setting_value TEXT DEFAULT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Default Application Settings
+INSERT INTO app_settings (setting_key, setting_value) VALUES
+('default_from_email', 'noreply@example.com')
+ON DUPLICATE KEY UPDATE setting_value = 'noreply@example.com';
+
+INSERT INTO app_settings (setting_key, setting_value) VALUES
+('reply_to_email', 'support@example.com')
+ON DUPLICATE KEY UPDATE setting_value = 'support@example.com';
+
+INSERT INTO app_settings (setting_key, setting_value) VALUES
+('company_name', 'CtpaInstitute.org')
+ON DUPLICATE KEY UPDATE setting_value = 'CtpaInstitute.org';
+
+INSERT INTO app_settings (setting_key, setting_value) VALUES
+('items_per_page', '20')
+ON DUPLICATE KEY UPDATE setting_value = '20';
+
+-- Add any other essential default settings here.
+-- For example, a site title or theme setting could be added later.

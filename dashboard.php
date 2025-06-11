@@ -3,7 +3,8 @@
 // before this page's content tries to use them.
 // Assuming index.php (which includes this file) handles including config/database.php.
 // We need to include our new dashboard functions here.
-require_once 'includes/dashboard_functions.php';
+require_once 'includes/functions.php'; // ENSURE THIS IS FIRST or very early
+require_once 'includes/dashboard_functions.php'; // Specific functions for this page
 
 // Fetch dashboard statistics
 $dashboard_stats = get_dashboard_stats();
