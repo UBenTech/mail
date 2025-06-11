@@ -106,9 +106,9 @@ $recent_campaigns = get_recent_campaigns(5); // Get 5 recent campaigns
                                                 <td><?php echo $campaign['clicks_percentage']; ?></td>
                                                 <td>
                                                     <?php if (strtolower($campaign['status']) == 'draft' || strtolower($campaign['status']) == 'scheduled'): ?>
-                                                        <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                                        <a href="compose.php?edit_campaign_id=<?php echo htmlspecialchars($campaign['id']); ?>" class="btn btn-sm btn-outline-primary">Edit</a>
                                                     <?php else: ?>
-                                                        <button class="btn btn-sm btn-outline-primary">View</button>
+                                                        <button class="btn btn-sm btn-outline-info">View</button> <?php // Remains a non-functional button for 'sent' status for now ?>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>
