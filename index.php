@@ -36,16 +36,9 @@ switch ($page) {
         // Example: include a placeholder or the actual page if it exists
         $page_file = ROOT_PATH . $page . '.php';
         if (file_exists($page_file)) {
-            // include $page_file; // This would be for when those pages are created
-            // For now, let's just show a simple message or redirect to dashboard
-            // For simplicity in this step, we'll just re-include dashboard for these.
-            // In a real scenario, you'd have specific files or a "coming soon" page.
-            echo "<p>The '{$page}' page is under construction. Displaying dashboard for now.</p>";
-            include ROOT_PATH . 'dashboard.php'; // Or a dedicated placeholder page
+            include $page_file; // THIS IS THE KEY CHANGE
         } else {
-            // Default to dashboard if a specific page file isn't found (even if in allowed_pages)
-            // Or show a 404 error
-            // For now, just show a message and dashboard
+            // This part can remain as is, for handling if a page file is accidentally deleted
             echo "<p>Page '{$page}' not found. Displaying dashboard.</p>";
             include ROOT_PATH . 'dashboard.php';
         }
