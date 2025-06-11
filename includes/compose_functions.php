@@ -151,7 +151,7 @@ if (!function_exists('get_campaign_by_id')) {
             return null;
         }
 
-        $sql = "SELECT id, name, subject, body_html, status, scheduled_at FROM campaigns WHERE id = ?";
+        $sql = "SELECT id, name, subject, body_html, status, scheduled_at, created_at, sent_at FROM campaigns WHERE id = ?";
         $stmt = $conn->prepare($sql);
 
         if ($stmt === false) {
