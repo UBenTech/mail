@@ -38,6 +38,12 @@ if (isset($_GET['id']) && is_numeric($_GET['id']) && $_GET['id'] > 0) {
 include __DIR__ . '/includes/header.php';
 // Include sidebar
 include __DIR__ . '/includes/sidebar.php';
+
+// Fetch recipients if campaign data was loaded successfully
+$campaign_recipients_list = [];
+if ($campaign_data) {
+    $campaign_recipients_list = get_recipients_for_campaign($conn, $campaign_id);
+}
 ?>
 
 <!-- Main Content for campaign_view.php -->
@@ -126,6 +132,56 @@ include __DIR__ . '/includes/sidebar.php';
                 <small class="text-muted">Preview is sandboxed for security. Actual email rendering may vary in email clients.</small>
             </div>
         </div>
+
+      <?php if ($campaign_data): // Only show this section if campaign data exists ?>
+      <div class="card mt-4">
+          <div class="card-header">
+              <h5>Targeted Recipients (<?php echo count($campaign_recipients_list); ?>)</h5>
+          </div>
+          <div class="card-body">
+              <?php if (!empty($campaign_recipients_list)): ?>
+                  <div class="table-responsive">
+                      <table class="table table-sm table-striped table-hover">
+                          <thead>
+                              <tr>
+                                  <th>Name</th>
+                                  <th>Email Address</th>
+                                  <th>Status</th>
+                                  <th>Processed At</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              <?php foreach ($campaign_recipients_list as $recipient): ?>
+                                  <tr>
+                                      <td><?php echo htmlspecialchars(trim($recipient['first_name'] . ' ' . $recipient['last_name'])) ?: 'N/A'; ?></td>
+                                      <td><?php echo htmlspecialchars($recipient['email_address']); ?></td>
+                                      <td>
+                                          <span class="badge bg-<?php
+                                              $rec_status_class = 'secondary'; // Default
+                                              switch (strtolower($recipient['status'])) {
+                                                  case 'sim_sent': $rec_status_class = 'success'; break;
+                                                  case 'targeted': $rec_status_class = 'info'; break;
+                                                  case 'sim_failed': $rec_status_class = 'danger'; break;
+                                                  // Add more cases if other recipient statuses exist
+                                              }
+                                              echo $rec_status_class;
+                                          ?>"><?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $recipient['status']))); ?></span>
+                                      </td>
+                                      <td>
+                                          <?php echo !empty($recipient['processed_at']) ? htmlspecialchars(date("Y-m-d H:i A", strtotime($recipient['processed_at']))) : 'N/A'; ?>
+                                      </td>
+                                  </tr>
+                              <?php endforeach; ?>
+                          </tbody>
+                      </table>
+                  </div>
+              <?php else: ?>
+                  <p class="text-muted">No recipients were targeted for this campaign, or recipient data is not available.</p>
+              <?php endif; ?>
+          </div>
+      </div>
+      <?php endif; // End $campaign_data check for recipient section ?>
+
     <?php else:
         // This case should ideally not be reached if error_message is properly set for not found/invalid ID
         // or if $campaign_data is null due to DB error and error_message is set.

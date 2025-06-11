@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/functions.php'; // This handles DB connection and loads $APP_SETTINGS
 require_once 'includes/compose_functions.php'; // For campaign functions
+require_once __DIR__ . '/includes/contacts_functions.php'; // For get_all_contacts()
 
 global $conn; // Ensure $conn is in scope
 global $APP_SETTINGS; // Ensure $APP_SETTINGS is in scope
@@ -105,6 +106,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['campaign_name_preserve'
     }
 }
 
+// Fetch all available contacts for selection
+$all_available_contacts = [];
+if (isset($conn) && $conn instanceof mysqli && $conn->ping()) {
+    $all_available_contacts = get_all_contacts($conn);
+} else {
+    if(empty($page_error_message)) { // Avoid duplicate DB error messages
+        $page_error_message .= " Database connection error. Cannot load contacts for recipient selection. ";
+    }
+}
+// Initialize $selected_contact_ids for sticky form handling on POST error
+$selected_contact_ids = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['selected_contacts']) && is_array($_POST['selected_contacts'])) {
+    $selected_contact_ids = array_map('intval', $_POST['selected_contacts']);
+}
+// If in edit mode (GET), this would be the place to load existing recipients for this campaign
+// and populate $selected_contact_ids. This is for a future step.
+
 
 // Handle POST request (create or update)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -117,13 +135,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $scheduled_at_value = $_POST['scheduled_at'] ?? '';
     $action = $_POST['action'];
 
+    // Get selected contact IDs from POST
+    $selected_contact_ids_from_post = [];
+    if (isset($_POST['selected_contacts']) && is_array($_POST['selected_contacts'])) {
+        $selected_contact_ids_from_post = array_map('intval', $_POST['selected_contacts']);
+    }
+    // $selected_contact_ids is already initialized earlier for sticky form, make sure to use the POSTed value here for saving
+    // No, $selected_contact_ids is for display. $selected_contact_ids_from_post is for saving.
+
+    // Validation: If sending or scheduling, require at least one recipient.
+    if (($action === 'send_now' || $action === 'schedule_campaign') && empty($selected_contact_ids_from_post)) {
+        if(empty($page_error_message)) {
+            $page_error_message = "Please select at least one recipient to send or schedule a campaign.";
+        } else {
+            $page_error_message .= "<br>Please select at least one recipient to send or schedule a campaign.";
+        }
+    }
+
     // Determine if we are in edit mode for this POST submission
     $campaign_id_for_saving = null;
     if (isset($_POST['campaign_id']) && is_numeric($_POST['campaign_id']) && $_POST['campaign_id'] > 0) {
         $campaign_id_for_saving = (int)$_POST['campaign_id'];
         $edit_mode = true;
-        $campaign_id_to_edit = $campaign_id_for_saving; // Ensure $campaign_id_to_edit is set for POST context
-         // Update page title for edit mode if it wasn't set by GET (e.g. POST error on edit)
+        $campaign_id_to_edit = $campaign_id_for_saving;
         if ($page_title === "Compose New Campaign" || strpos($page_title, (string)$campaign_id_for_saving) === false) {
             $temp_campaign_name_for_title = !empty($campaign_name) ? $campaign_name : null;
             if (empty($temp_campaign_name_for_title) && isset($conn) && $conn instanceof mysqli && $conn->ping()){
@@ -143,7 +177,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $status = 'draft';
     } elseif ($action === 'schedule_campaign') {
         if (!$schedule_send || empty($scheduled_at_value)) {
-            $page_error_message = "To schedule a campaign, please check 'Schedule Send' and select a date and time.";
+            // This error might be redundant if the recipient selection error is already set,
+            // but good to keep for specific schedule field validation.
+            if(empty($page_error_message)) $page_error_message = "To schedule a campaign, please check 'Schedule Send' and select a date and time.";
+            else $page_error_message .= "<br>To schedule a campaign, please check 'Schedule Send' and select a date and time.";
         } else {
             $status = 'scheduled';
             $scheduled_at_for_db = $scheduled_at_value;
@@ -163,7 +200,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $body_html,
                 $status,
                 $scheduled_at_for_db,
-                $campaign_id_for_saving // Pass the ID if we are editing
+                $campaign_id_for_saving,
+                $selected_contact_ids_from_post // Pass selected contacts
             );
 
             if (is_numeric($save_result_mixed) && $save_result_mixed > 0) {
@@ -180,22 +218,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $action_verb = 'created';
                 }
 
-                // Refine action_verb based on status for more specific feedback
                 if ($status === 'sent' && $action_verb !== 'processed (unexpected ID)') $action_verb = 'sent';
                 else if ($status === 'scheduled' && $action_verb !== 'processed (unexpected ID)') $action_verb = 'scheduled';
-                // If 'draft', it will use 'created' or 'updated' which is fine.
 
                 $page_success_message = "Campaign '" . htmlspecialchars($campaign_name) . "' " . $action_verb . " successfully (ID: " . $returned_campaign_id . ")!";
 
-                if (!$edit_mode) { // New campaign successfully created
+                if (!$edit_mode) {
                     $campaign_name = $subject = $body_html = $selected_template_id = $scheduled_at_value = '';
                     $schedule_send = false;
-                } else { // Existing campaign successfully updated
-                    // Re-load data for the current campaign to show updated values
+                    $selected_contact_ids = []; // Clear selected contacts for new campaign form
+                } else {
                     $campaign_data_reloaded = get_campaign_by_id($conn, $returned_campaign_id);
                     if ($campaign_data_reloaded) {
-                        // $campaign_name, $subject, $body_html are already from $_POST (latest submission)
-                        // Update status and schedule related fields from what's now in DB
                         $current_campaign_status = $campaign_data_reloaded['status'];
                         if ($campaign_data_reloaded['status'] === 'scheduled' && !empty($campaign_data_reloaded['scheduled_at'])) {
                             $schedule_send = true;
@@ -207,8 +241,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             $schedule_send = false;
                             $scheduled_at_value = '';
                         }
-                        // Update page title again in case name changed during update
                         $page_title = "Edit Campaign: " . htmlspecialchars($campaign_data_reloaded['name']);
+                        // For edit mode, re-populating $selected_contact_ids from DB would be needed here
+                        // if we weren't relying on the user re-selecting or if the save failed partially.
+                        // Since save_campaign_to_db now handles recipients, we might not need to reload them here for display
+                        // unless the save_campaign_to_db fails AFTER deleting recipients but before adding new ones.
+                        // For now, $selected_contact_ids (for display) remains what was last POSTed if there was an error.
+                        // If successful, it's better to redirect or clear them if not clearing the whole form.
                     }
                 }
             } else {
@@ -299,6 +338,37 @@ if (isset($conn) && $conn instanceof mysqli && $conn->ping() && empty($page_erro
                         <small class="form-text text-muted">Template selection is disabled for campaigns that are not drafts. Body can be edited directly.</small>
                     <?php endif; ?>
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Select Recipients</label>
+                    <div class="contact-list-container border p-3" style="max-height: 200px; overflow-y: auto;">
+                        <?php if (!empty($all_available_contacts)): ?>
+                            <?php foreach ($all_available_contacts as $contact): ?>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="selected_contacts[]"
+                                           value="<?php echo htmlspecialchars($contact['id']); ?>"
+                                           id="contact_<?php echo htmlspecialchars($contact['id']); ?>"
+                                           <?php if (in_array($contact['id'], $selected_contact_ids)) echo 'checked'; ?>>
+                                    <label class="form-check-label" for="contact_<?php echo htmlspecialchars($contact['id']); ?>">
+                                        <?php echo htmlspecialchars(trim($contact['first_name'] . ' ' . $contact['last_name'])); ?>
+                                        (&lt;<?php echo htmlspecialchars($contact['email']); ?>&gt;)
+                                    </label>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php elseif (empty($page_error_message)): ?>
+                            <p class="text-muted">No contacts found. Please add contacts first.</p>
+                        <?php else: ?>
+                             <p class="text-danger">Could not load contacts. See error message above.</p>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (empty($all_available_contacts) && empty($page_error_message)): ?>
+                        <small class="form-text text-muted">
+                            Go to the <a href="contacts.php">Contacts page</a> to add recipients.
+                        </small>
+                    <?php endif; ?>
+                </div>
+
                 <div class="mb-3">
                     <label for="body_html" class="form-label">Email Body</label>
                     <textarea class="form-control" id="body_html" name="body_html" rows="15" required <?php if ($edit_mode && $current_campaign_status === 'sent') echo 'readonly'; ?>><?php echo htmlspecialchars($body_html); ?></textarea>
