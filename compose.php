@@ -1,5 +1,5 @@
 <?php
-require_once 'config/database.php';
+require_once 'includes/functions.php'; // This handles DB connection and loads $APP_SETTINGS
 require_once 'includes/compose_functions.php'; // For save_campaign_to_db, get_all_templates_for_compose, get_template_content_for_compose
 
 $all_templates = [];

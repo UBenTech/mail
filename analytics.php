@@ -1,5 +1,5 @@
 <?php
-require_once 'config/database.php';
+require_once 'includes/functions.php'; // This handles DB connection and loads $APP_SETTINGS
 require_once 'includes/analytics_functions.php';
 
 $summary_stats = [];

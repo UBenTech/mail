@@ -1,5 +1,5 @@
 <?php
-require_once 'config/database.php'; // For $conn
+require_once 'includes/functions.php'; // This handles DB connection and loads $APP_SETTINGS
 require_once 'includes/templates_functions.php'; // For template functions
 
 // Initialize variables

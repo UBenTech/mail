@@ -7,8 +7,19 @@ $current_page = isset($page) ? $page : 'dashboard';
 <!-- Sidebar -->
 <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar">
     <div class="sidebar-header">
-        <img src="public/images/logo.png" alt="CtpaInstitute Logo" class="logo">
-        <h3>CtpaInstitute.org</h3>
+        <img src="public/images/logo.png" alt="Logo" class="logo"> <!-- Alt text can be generic or also from settings -->
+        <h3><?php
+              // Ensure $APP_SETTINGS is available (should be from functions.php)
+              // and get_app_setting_value is available (from settings_functions.php via functions.php)
+              $company_name_default = 'Email Platform';
+              $display_company_name = $company_name_default;
+              if (isset($APP_SETTINGS) && is_array($APP_SETTINGS) && function_exists('get_app_setting_value')) {
+                  $display_company_name = htmlspecialchars(get_app_setting_value($APP_SETTINGS, 'company_name', $company_name_default));
+              } elseif (isset($APP_SETTINGS['company_name'])) { // Fallback if function not available but array key is
+                  $display_company_name = htmlspecialchars($APP_SETTINGS['company_name']);
+              }
+              echo $display_company_name;
+            ?></h3>
     </div>
     <ul class="nav flex-column">
         <li class="nav-item">
